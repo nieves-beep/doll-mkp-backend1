@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Productos en Tiempo Real</title>
+  <title>Productos en tiempo real</title>
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <h1>Lista de Productos</h1>
+  <h1>Lista de productos</h1>
 
   <!-- LISTA DE PRODUCTOS -->
   <ul id="productList">
@@ -20,12 +20,12 @@
     {{/each}}
   </ul>
 
-  <h2>Agregar Producto</h2>
+  <h2>Agregar producto</h2>
   <!-- FORM AGREGAR PRODUCTOS -->
   <form id="productForm">
     <input type="text" id="productName" placeholder="Nombre del producto" required />
     <input type="number" id="productPrice" placeholder="Precio" required />
-    <button type="submit">Agregar Producto</button>
+    <button type="submit">Agregar producto</button>
   </form>
 
   <script>
