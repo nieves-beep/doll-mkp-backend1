@@ -1,113 +1,70 @@
 import express from "express";
+import http from "http";
+import { engine } from "express-handlebars";
+import { Server } from "socket.io";
+import viewsRouter from "./routes/views.router.js";
 import ProductManager from "./productManager.js";
-import CartManager from "./cartManager.js";
-
-const cartManager = new CartManager("./src/carts.json");
 
 const app = express();
+const server = http.createServer(app);
 
-app.use( express.json() );
+// WEBSOCKET
+const io = new Server(server);
+
+// RUTAS ESATATICAS
+app.use(express.static("public"));
+
+// HANDLEBARS
+app.engine("handlebars", engine());
+app.set("view engine", "handlebars");
+app.set("views", "./src/views");
+
 const productManager = new ProductManager("./src/products.json");
 
-//endpoints
-app.get("/", (req, res)=> {
-  res.json( { status: "success", message: "Hola Mundo!" } )
-})
-
-app.get("/api/products", async(req, res)=> {
+// RUTA REAL TIME PRODUCTS
+app.get("/realtimeproducts", async (req, res) => {
   try {
     const products = await productManager.getProducts();
-    res.status(200).json({ message: "Lista de productos", products });
+    res.render("realTimeProducts", { products });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).send("Error al obtener los productos");
   }
 });
 
-app.delete("/api/products/:pid", async(req, res)=> {
+// WEBSOCKET MANEJO DE PRODUCTS
+io.on("connection", async (socket) => {
+  console.log("Nuevo cliente conectado! " + socket.id);
+
   try {
-    const pid = req.params.pid;
-    const products = await productManager.deleteProductById(pid);
-    res.status(200).json({ message: "Producto Eliminado", products });
+    const products = await productManager.getProducts();
+    socket.emit("productList", products);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error al obtener los productos para el cliente:", error.message);
   }
+
+  // AGREGAR PRODUCTO
+  socket.on("newProduct", async (product) => {
+    try {
+      await productManager.addProduct(product); 
+      io.emit("productAdded", product);
+    } catch (error) {
+      console.error("Error al agregar el producto:", error.message);
+    }
+  });
+
+  // ELIMINAR PRODUCTO
+  socket.on("deleteProduct", async (productId) => {
+    try {
+      await productManager.deleteProductById(productId); 
+      io.emit("productDeleted", productId);
+    } catch (error) {
+      console.error("Error al eliminar el producto:", error.message);
+    }
+  });
 });
 
-app.post("/api/products", async(req, res)=> {
-  try {
-    const newProduct = req.body;
-    const products = await productManager.addProduct(newProduct);
-    res.status(201).json({ message: "Producto agregado", products });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+app.use("/", viewsRouter);
 
-app.put("/api/products/:pid", async(req, res)=> {
-  try {
-    const pid = req.params.pid;
-    const updates = req.body;
-
-    const products = await productManager.setProductById(pid, updates);
-    res.status(200).json({ message: "Producto Actualizado", products });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// carritos
-
-// carrito vacío (POST /api/carts)
-
-app.post("/api/carts", async (req, res) => {
-  try {
-    const newCart = await cartManager.createCart();
-    res.status(201).json({ message: "Carrito creado", newCart });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// obtiene productos del carrito por id (GET /api/carts/:cid)
-
-app.get("/api/carts/:cid", async (req, res) => {
-  try {
-    const cid = req.params.cid;
-    const cart = await cartManager.getCartById(cid);
-    if (!cart) return res.status(404).json({ message: "Carrito no encontrado" });
-    res.status(200).json(cart);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// agrega productos al carrito (POST /api/carts/:cid/product/:pid)
-
-app.post("/api/carts/:cid/product/:pid", async (req, res) => {
-  try {
-    const { cid, pid } = req.params;
-    const updatedCart = await cartManager.addProductToCart(cid, pid);
-    res.status(200).json({ message: "Producto agregado al carrito", updatedCart });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-//devuelve un producto buscado a traves de su id
-app.get("/api/products/:pid", async(req, res)=> {});
-
-// /api/carts
-
-//crea carritos vacios
-app.post("/api/carts", async(req, res)=> {});
-
-//trae los productos de un carrito elegido por su id
-app.get("/api/carts/:cid", async(req, res)=> {});
-
-
-app.post("/api/carts/:cid/product/:pid", async(req, res)=> {});
-
-
-app.listen(8080, ()=> {
-  console.log("Servidor iniciado correctamente en el puerto 8080!");
+server.listen(8080, () => {
+  console.log("Servidor iniciado correctamente en http://localhost:8080");
 });

@@ -5,7 +5,8 @@
     "description": "Paleta de 10 sombras en tonos fríos con acabados mate y brillantes, ideal para looks versátiles",
     "code": 1987,
     "price": 58000,
-    "stock": 8
+    "stock": 8,
+    "thumbnail": "/img/paleta-lily.png"
   },
   {
     "id": "687c276d-fe9c-4723-af0d-77c020b00e16",
@@ -13,7 +14,8 @@
     "description": "Tint de labios jugoso y brillante que hidrata y aporta color construible",
     "code": 1658,
     "price": 26900,
-    "stock": 15
+    "stock": 15,
+    "thumbnail": "/img/labial-peripera.png"
   },
   {
     "id": "0ab2f3e5-26d6-471b-89f2-69cbc4aebb59",
@@ -21,6 +23,12 @@
     "description": "Cushion de acabado satinado con cobertura ligera, hidratación y SPF 30",
     "code": 4876,
     "price": 62000,
-    "stock": 13
+    "stock": 13,
+    "thumbnail": "/img/cushion-unleashia.png"
+  },
+  {
+    "id": "c2ac22f3-2473-4978-90ae-021982a7722a",
+    "name": "delineador",
+    "price": "23000"
   }
 ]
