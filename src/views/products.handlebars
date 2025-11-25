@@ -1,0 +1,60 @@
+<section class="page-container">
+
+  <div class="products-grid">
+    {{#each products}}
+      <article class="product-card">
+        <div class="product-thumb">
+          {{#if thumbnails.[0]}}
+            <img src="{{thumbnails.[0]}}" alt="{{title}}" />
+          {{else}}
+            <div class="placeholder-thumb">♡</div>
+          {{/if}}
+        </div>
+
+        <h3 class="product-title">{{title}}</h3>
+        <p class="product-price">${{price}}</p>
+        <p class="product-desc">{{description}}</p>
+
+        <a href="/products/{{_id}}" class="btn-secondary">Ver detalle</a>
+
+        <form action="/api/carts/{{../cartId}}/products/{{_id}}" method="post">
+        <button class="btn-primary">Agregar al carrito</button>
+        </form>
+
+      </article>
+    {{/each}}
+  </div>
+
+  <div class="pagination">
+    {{#if hasPrevPage}}
+      <a href="/products?page={{prevPage}}" class="btn-secondary">← Anterior</a>
+    {{/if}}
+
+    <span class="page-indicator">Página {{page}}</span>
+
+    {{#if hasNextPage}}
+      <a href="/products?page={{nextPage}}" class="btn-secondary">Siguiente →</a>
+    {{/if}}
+  </div>
+
+  <script>
+document.querySelectorAll("form[action*='/api/carts/'][action*='/products/']").forEach(form => {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const action = form.getAttribute("action");
+
+    try {
+      await fetch(action, { method: "POST" });
+
+      window.location.href = `/carts/{{cartId}}`;
+
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  });
+});
+</script>
+
+
+</section>

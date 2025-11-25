@@ -1,0 +1,22 @@
+<h2 class="title-center">📡 Productos en tiempo real</h2>
+
+<ul id="realTimeList" class="rt-list"></ul>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  socket.on("updateProducts", (products) => {
+    const list = document.getElementById("realTimeList");
+    list.innerHTML = "";
+
+    products.forEach(p => {
+      const item = `
+        <li class="rt-item">
+          <strong>${p.title}</strong> — $${p.price}
+        </li>
+      `;
+      list.innerHTML += item;
+    });
+  });
+</script>

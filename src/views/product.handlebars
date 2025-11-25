@@ -1,0 +1,36 @@
+<div class="product-detail-container">
+
+  <h2 class="product-detail-title">
+    🌸 {{product.title}} 🌸
+  </h2>
+
+  {{#if product.thumbnails.[0]}}
+    <img
+      src="{{product.thumbnails.[0]}}"
+      alt="{{product.title}}"
+      class="product-detail-img"
+    />
+  {{/if}}
+
+  <div class="product-detail-card">
+
+    <p><strong>Precio:</strong> ${{product.price}}</p>
+    <p><strong>Categoría:</strong> {{product.category}}</p>
+    <p><strong>Descripción:</strong> {{product.description}}</p>
+
+    <form
+      action="/api/carts/{{cartId}}/products/{{product._id}}" method="POST"
+    >
+      <div class="btn-detail-center">
+      <button class="btn-primary detail-add-btn">Agregar al carrito</button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <div class="btn-center">
+    <a href="/products" class="btn-secondary">⬅ Volver</a>
+  </div>
+
+</div>

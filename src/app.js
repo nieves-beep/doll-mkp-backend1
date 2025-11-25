@@ -3,68 +3,82 @@ import http from "http";
 import { engine } from "express-handlebars";
 import { Server } from "socket.io";
 import viewsRouter from "./routes/views.router.js";
-import ProductManager from "./productManager.js";
+import productsRouter from "./routes/products.router.js";
+import cartsRouter from "./routes/carts.router.js";
+import connectMongoDB from "./config/db.js";
+import { CartModel } from "./models/carts.model.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+await connectMongoDB();
+console.log("MongoDB conectado:", process.env.STRING_MONGODB);
+
+// CARRITO GLOBAL
+
+let globalCartId = null;
+
+const ensureGlobalCart = async () => {
+  if (!globalCartId) {
+    const cart = await CartModel.create({ products: [] });
+    globalCartId = cart._id.toString();
+    console.log("Carrito global creado:", globalCartId);
+  }
+};
+
+await ensureGlobalCart();
 
 const app = express();
 const server = http.createServer(app);
-
-// WEBSOCKET
 const io = new Server(server);
+app.set("io", io);
 
-// RUTAS ESATATICAS
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+
+app.use((req, res, next) => {
+  res.locals.cartId = globalCartId;
+  next();
+});
+
 // HANDLEBARS
-app.engine("handlebars", engine());
+
+app.engine(
+  "handlebars",
+  engine({
+    helpers: {
+      reduce(products) {
+        if (!products) return 0;
+        let total = 0;
+        products.forEach((item) => {
+          if (item.product && item.product.price) {
+            total += item.product.price * item.quantity;
+          }
+        });
+        return total;
+      },
+    },
+  })
+);
+
 app.set("view engine", "handlebars");
 app.set("views", "./src/views");
 
-const productManager = new ProductManager("./src/products.json");
-
-// RUTA REAL TIME PRODUCTS
-app.get("/realtimeproducts", async (req, res) => {
-  try {
-    const products = await productManager.getProducts();
-    res.render("realTimeProducts", { products });
-  } catch (error) {
-    res.status(500).send("Error al obtener los productos");
-  }
-});
-
-// WEBSOCKET MANEJO DE PRODUCTS
-io.on("connection", async (socket) => {
-  console.log("Nuevo cliente conectado! " + socket.id);
-
-  try {
-    const products = await productManager.getProducts();
-    socket.emit("productList", products);
-  } catch (error) {
-    console.error("Error al obtener los productos para el cliente:", error.message);
-  }
-
-  // AGREGAR PRODUCTO
-  socket.on("newProduct", async (product) => {
-    try {
-      await productManager.addProduct(product); 
-      io.emit("productAdded", product);
-    } catch (error) {
-      console.error("Error al agregar el producto:", error.message);
-    }
-  });
-
-  // ELIMINAR PRODUCTO
-  socket.on("deleteProduct", async (productId) => {
-    try {
-      await productManager.deleteProductById(productId); 
-      io.emit("productDeleted", productId);
-    } catch (error) {
-      console.error("Error al eliminar el producto:", error.message);
-    }
-  });
-});
-
+// ROUTERS
 app.use("/", viewsRouter);
+app.use("/api/products", productsRouter);
+app.use("/api/carts", cartsRouter);
 
-server.listen(8080, () => {
-  console.log("Servidor iniciado correctamente en http://localhost:8080");
+// SOCKET.IO
+io.on("connection", () => {
+  console.log("Cliente conectado");
+});
+
+// SERVER
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+  console.log(`Servidor funcionando en puerto ${PORT}`);
 });

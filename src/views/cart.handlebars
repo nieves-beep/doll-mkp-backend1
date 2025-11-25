@@ -1,0 +1,36 @@
+<h2 class="cart-title">Mi carrito 🛒</h2>
+
+<div class="cart-container">
+
+  {{#each cart.products}}
+    <div class="cart-item-card">
+
+      <!-- IMAGEN -->
+      <img src="{{this.product.thumbnails.[0]}}" class="cart-img">
+
+      <!-- INFO DEL PRODUCTO -->
+      <div class="cart-info">
+        <h3>{{this.product.title}}</h3>
+
+        <p>Cantidad: {{this.quantity}}</p>
+
+        <p>$ {{this.product.price}}</p>
+
+        <!-- ELIMINAR -->
+        <form action="/api/carts/{{../cart._id}}/products/{{this.product._id}}?_method=DELETE" method="post">
+          <button class="btn-secondary">Eliminar</button>
+        </form>
+      </div>
+
+    </div>
+  {{/each}}
+
+</div>
+
+<!-- TOTAL -->
+<h2 class="cart-total">Total: $ {{total}}</h2>
+
+<!-- VACIAR CARRITO -->
+<form action="/api/carts/{{cart._id}}?_method=DELETE" method="post">
+  <button class="btn-primary">Vaciar carrito</button>
+</form>
